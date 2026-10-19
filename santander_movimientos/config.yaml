@@ -1,5 +1,5 @@
 name: Santander Movimientos
-version: "1.0.1"
+version: "1.0.2"
 slug: santander_movimientos
 description: Descarga movimientos de cuenta corriente y tarjeta de crédito Santander Chile (banca personas) y los publica en HA por MQTT
 url: https://github.com/ernestoly78/ha-apps

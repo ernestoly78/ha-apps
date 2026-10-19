@@ -32,6 +32,7 @@ from zoneinfo import ZoneInfo
 OPTIONS_FILE = Path(os.environ.get("OPTIONS_FILE", "/data/options.json"))
 BASE = Path(os.environ.get("SANTANDER_DIR", "/homeassistant/santander"))
 RAW = BASE / "raw"
+DEBUG = BASE / "debug"
 HIST = BASE / "historico.csv"
 STATE_FILE = Path(os.environ.get("STATE_FILE", "/data/estado.json"))
 TZ = ZoneInfo(os.environ.get("TZ", "America/Santiago"))
@@ -194,6 +195,27 @@ def crear_scraper(incluir_tarjetas: bool, capturador: Capturador | None):
             if capturador is not None:
                 self._ensure_page().on("response", capturador.on_response)
             super()._login()
+
+        # Diagnóstico: siempre (sin depender de debug_mode, que fuerza navegador
+        # visible) guarda HTML, texto visible y captura cuando un paso falla.
+        def _save_debug_info(self, step_name: str) -> None:
+            if not re.search(r"error|timeout|failed|01_login_page", step_name):
+                return
+            try:
+                page = self.page
+                if page is None:
+                    return
+                DEBUG.mkdir(parents=True, exist_ok=True)
+                base = DEBUG / step_name
+                info = {"paso": step_name, "url": page.url, "titulo": page.title(),
+                        "frames": [f.url for f in page.frames]}
+                (base.with_suffix(".json")).write_text(json.dumps(info, ensure_ascii=False, indent=1), encoding="utf-8")
+                (base.with_suffix(".txt")).write_text(page.inner_text("body")[:200_000], encoding="utf-8")
+                (base.with_suffix(".html")).write_text(page.content()[:2_000_000], encoding="utf-8")
+                page.screenshot(path=str(base.with_suffix(".png")), full_page=True)
+                log(f"diagnóstico guardado: {base.name}.* (url {page.url})")
+            except Exception as e:
+                log(f"diagnóstico {step_name}: no se pudo guardar ({type(e).__name__})")
 
         # -- expandir listas paginadas ------------------------------------
         def _expandir(self) -> None:
@@ -468,6 +490,7 @@ def main() -> None:
 
         corrida = datetime.now(TZ).strftime("%Y%m%d-%H%M%S")
         cap = Capturador(RAW / corrida) if opts["capturar_api"] else None
+        shutil.rmtree(DEBUG, ignore_errors=True)  # solo el diagnóstico de la última corrida
         publicar("actualizando", {"inicio": ahora()})
         log("Iniciando descarga")
         try:
