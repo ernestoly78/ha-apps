@@ -1,0 +1,31 @@
+name: Santander Movimientos
+version: "1.0.0"
+slug: santander_movimientos
+description: Descarga movimientos de cuenta corriente y tarjeta de crédito Santander Chile (banca personas) y los publica en HA por MQTT
+url: https://github.com/ernestoly78/ha-apps
+arch:
+  - aarch64
+  - amd64
+startup: application
+boot: auto
+init: true
+hassio_api: true
+services:
+  - mqtt:need
+map:
+  - type: homeassistant_config
+    read_only: false
+options:
+  rut: ""
+  clave: ""
+  intervalo_horas: 12
+  ejecutar_al_iniciar: false
+  incluir_tarjetas: true
+  capturar_api: true
+schema:
+  rut: str
+  clave: password
+  intervalo_horas: int(2,48)
+  ejecutar_al_iniciar: bool
+  incluir_tarjetas: bool
+  capturar_api: bool
