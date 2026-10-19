@@ -30,7 +30,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 OPTIONS_FILE = Path(os.environ.get("OPTIONS_FILE", "/data/options.json"))
-BASE = Path(os.environ.get("SANTANDER_DIR", "/config/santander"))
+BASE = Path(os.environ.get("SANTANDER_DIR", "/homeassistant/santander"))
 RAW = BASE / "raw"
 HIST = BASE / "historico.csv"
 STATE_FILE = Path(os.environ.get("STATE_FILE", "/data/estado.json"))
